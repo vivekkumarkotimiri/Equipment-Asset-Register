@@ -1,0 +1,196 @@
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --ink:#1F2723;
+  --paper:#EFEAE0;
+  --teal:#16333A;
+  --amber:#C97A2B;
+  --amber-light:#E3A866;
+  --line:#C7BFAC;
+  --good:#3C6E47;
+  --bad:#A5402E;
+  --display: 'Source Serif 4', serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --body: 'Inter', sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  min-height:100vh;
+}
+
+/* ============================================================
+   TOP BAR / HEADER  (signature element: live ledger stamp)
+   ============================================================ */
+.topbar{
+  background:var(--teal);
+  color:var(--paper);
+  padding:18px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:12px;
+  border-bottom:4px solid var(--amber);
+  min-height:80px;
+}
+.brand{ display:flex; align-items:center; gap:14px; }
+  .brand-logo{
+      height:80px;
+      width:auto;
+      flex-shrink:0;
+    }
+.brand-text { display: flex; color:var(--paper);flex-direction: column; }
+.stamp{
+  font-family:var(--mono);
+  font-size:13px;
+  text-align:right;
+  line-height:1.5;
+  border:1px solid var(--amber);
+  padding:6px 14px;
+  border-radius:2px;
+  background:rgba(0,0,0,.15);
+}
+.stamp .date{color:var(--amber-light); font-weight:600;}
+.stamp .time{font-size:16px; font-weight:600;}
+
+.auth-zone{
+  display:flex;
+  align-items:space-between;
+  gap:100px;
+  font-family:var(--mono);
+  font-size:40px;
+}
+.role-pill{
+  padding:4px 10px;
+  border-radius:20px;
+  background:var(--amber);
+  color:var(--teal);
+  font-weight:600;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+button{
+  font-family:var(--body);
+  cursor:pointer;
+  border:none;
+  border-radius:4px;
+  font-weight:600;
+  transition:transform .08s ease, opacity .15s ease;
+}
+button:active{transform:scale(.97);}
+.btn-primary{background:var(--amber); color:var(--teal); padding:8px 16px;}
+.btn-primary:hover{opacity:.9;}
+.btn-ghost{background:transparent; color:var(--paper); border:1px solid var(--line); padding:7px 14px;}
+.btn-ghost:hover{background:rgba(255,255,255,.08);}
+.btn-small{padding:5px 10px; font-size:12px;}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:28px;
+}
+.section-title{
+  font-family:var(--display);
+  font-size:19px;
+  font-weight:600;
+  margin:0 0 14px 0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.section-title::before{
+  content:"";
+  width:6px; height:6px;
+  background:var(--amber);
+  border-radius:50%;
+  display:inline-block;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:22px;
+  margin-bottom:24px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+
+/* ============================================================
+   LOGIN MODAL
+   ============================================================ */
+.modal-overlay{
+  position:fixed; inset:0;
+  background:rgba(22,51,58,.55);
+  display:flex; align-items:center; justify-content:center;
+  z-index:50;
+}
+.modal{
+  background:#fff;
+  border-radius:8px;
+  padding:30px;
+  width:320px;
+  border-top:4px solid var(--amber);
+}
+.modal h2{font-family:var(--display); margin-top:0;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#555; text-transform:uppercase; letter-spacing:.4px;}
+.field input, .field select{
+  width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:4px;
+  font-family:var(--body); font-size:14px;
+}
+.error-msg{color:var(--bad); font-size:12px; margin-top:6px;}
+.hint{font-size:11px; color:#888; margin-top:10px;}
+
+/* ============================================================
+   ENTRY FORM (admin only)
+   ============================================================ */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+  gap:14px;
+}
+.form-grid .full{grid-column:1/-1;}
+
+/* ============================================================
+   FILTER BAR
+   ============================================================ */
+.filter-bar{
+  display:flex; gap:14px; flex-wrap:wrap; align-items:end;
+  margin-bottom:18px;
+}
+.filter-bar .field{margin-bottom:0; min-width:150px;}
+.export-buttons{display:flex; gap:8px; margin-left:auto;}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+table{width:100%; border-collapse:collapse; font-size:13.5px;}
+thead th{
+  background:var(--teal); color:var(--paper);
+  text-align:left; padding:10px 8px;
+  font-family:var(--mono); font-size:11px;
+  text-transform:uppercase; letter-spacing:.5px;
+}
+tbody td{padding:9px 8px; border-bottom:1px solid var(--line); font-family:var(--mono);}
+tbody tr:hover{background:#FBF8F2;}
+.empty-row td{text-align:center; color:#999; padding:30px; font-family:var(--body);}
+
+.badge-total{
+  font-family:var(--mono); font-size:11px; color:#666; margin-bottom:10px;
+}
+footer{
+  text-align:center; padding:24px; font-size:11px; color:#888; font-family:var(--mono);
+}
+@media (max-width:640px){
+  .topbar{flex-direction:column; align-items:flex-start;}
+  .export-buttons{margin-left:0;}
+}
