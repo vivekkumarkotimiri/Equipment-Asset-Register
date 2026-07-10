@@ -118,6 +118,6 @@ app.get("/api/balance/:material", (_req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(` Local:   http://localhost:${PORT}`);
-  console.log(` Network: http://<Your Computer IP Address>:${PORT}   (share this with LAN users)`);
+  console.log(`Stock Register running at http://localhost:${PORT}`);
+  console.log(`Network: http://192.168.70.14:${PORT}`);
 });

@@ -51,6 +51,7 @@ button:active{ transform:scale(.97); }
 
 .modal-overlay{ position:fixed;inset:0; background:rgba(22,51,58,.55); display:flex;align-items:center;justify-content:center; z-index:50; }
 .modal{ background:#fff; border-radius:8px; padding:30px; width:320px; border-top:4px solid var(--amber); }
+.user{ height:72px; width:auto; flex-shrink:wrap;}
 .modal h2{ font-family:var(--display); margin-top:0; }
 
 .field{ margin-bottom:14px; }

@@ -19,7 +19,7 @@ const EXPORT = {
     doc.text(range + "   |   Generated: " + new Date().toLocaleString(), 14, 20);
     doc.autoTable({
       startY: 26,
-      head:[["S.No.","Date","Department","Name of the Officer","Room No.","Extension","Material","Issued Qty","Balance"]],
+      head:[["S.No.","Date","Name of the Department","Name of the Officer","Room No.","Extension","Material","Issued Quantity","Balance"]],
       body: this.rowsForExport(),
       styles:{ fontSize:7 }, headStyles:{ fillColor:[22,51,58] }
     });
@@ -29,9 +29,9 @@ const EXPORT = {
   toExcel(){
     const rows = FILTERS.currentSet().map((r, i) => ({
       "S.No.": i+1, Date: r.date,
-      "Department Name": r.deptName, "Name of the Officer": r.officerName,
-      "Room No": r.roomno||"","Extension": r.extension||"",
-      "Material": r.material, "Issued Qty": r.quantity, "Balance": r.balance
+      "Name of the Department": r.deptName, "Name of the Officer": r.officerName,
+      "Room No.": r.roomno||"", "Extension": r.extension||"",
+      "Material": r.material, "Issued Quantity": r.quantity, "Balance": r.balance
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();

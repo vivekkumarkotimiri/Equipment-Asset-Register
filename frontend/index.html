@@ -40,6 +40,7 @@
   <!-- LOGIN MODAL -->
   <div class="modal-overlay" id="loginOverlay" style="display:none;">
     <div class="modal">
+      <img class="user" src="images/logo.png" alt="logo">
       <h2>Admin Login</h2>
       <div class="field">
         <label>Username</label>
@@ -52,7 +53,6 @@
       <div class="error-msg" id="loginError"></div>
       <button class="btn-primary" style="width:100%;padding:10px;" onclick="AUTH.attemptLogin()">Log in</button>
       <button class="btn-ghost" style="width:100%;padding:8px;margin-top:8px;color:#555;border-color:#ccc;" onclick="AUTH.closeLogin()">Cancel</button>
-      <div class="hint">Credentials set in <code>.env</code> on the server (default: admin / admin123).</div>
     </div>
   </div>
 
@@ -81,9 +81,9 @@
         <table>
           <thead>
             <tr>
-              <th>S.No.</th><th>Date</th><th>Department</th><th>Officer</th>
-              <th>Room</th><th>Ext.</th><th>Material</th>
-              <th>Issued Qty</th><th>Balance</th><th>Actions</th>
+              <th>S.No.</th><th>Date</th><th>Name of the Department</th><th>Name of the Officer</th>
+              <th>Room No.</th><th>Extension</th><th>Material</th>
+              <th>Issued Quantity</th><th>Balance</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="tableBody">
@@ -168,7 +168,7 @@
     </div>
   </div>
 
-  <!-- TAB 3: STOCK ENTRY -->
+ <!-- TAB 3: STOCK ENTRY -->
   <div class="tab-content" id="tab-stock" style="display:none;">
 
     <!-- Stock entry form -->
@@ -231,11 +231,12 @@
         </table>
       </div>
     </div>
+
   </div>
 
 </div>
 
-<footer>Stock Register of AMC Contractors. </footer>
+<footer>Stock Register of AMC Contractors.</footer>
 
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
