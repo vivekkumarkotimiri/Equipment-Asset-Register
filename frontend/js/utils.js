@@ -1,25 +1,16 @@
-/* ================================================================
-   UTILS
-   Small shared helper functions used across files.
-   ================================================================ */
 function escapeHtml(str){
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
+  if(str === null || str === undefined) return "—";
+  const d = document.createElement("div");
+  d.textContent = String(str);
+  return d.innerHTML;
 }
 
-// Fills a <select> with numeric options 1..max (used for keyboard/mouse counts)
-function fillCountSelect(selectEl, max){
-  selectEl.innerHTML = "";
-  // blank / optional first option
-  const blank = document.createElement("option");
-  blank.value = 0;
-  blank.textContent = "—";
-  selectEl.appendChild(blank);
-  for(let i = 1; i <= max; i++){
+function buildMaterialSelect(selectEl, selectedVal){
+  selectEl.innerHTML = `<option value="">— Select Material —</option>`;
+  CONFIG.MATERIALS.forEach(m => {
     const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
+    opt.value = m; opt.textContent = m;
+    if(m === selectedVal) opt.selected = true;
     selectEl.appendChild(opt);
-  }
+  });
 }

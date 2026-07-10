@@ -1,44 +1,51 @@
-/* ================================================================
-   APP
-   Table rendering + bootstrap. This is the entry point — it runs
-   last, after every other module has defined itself.
-   ================================================================ */
 const APP = {
-  renderTable(){
-    const body = document.getElementById("tableBody");
-    const set = FILTERS.currentSet();
-    document.getElementById("recordCount").textContent = `${set.length} record${set.length===1?"":"s"} shown`;
 
+  showTab(name){
+    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+    document.getElementById(`tab-${name}`).style.display = "block";
+    document.querySelector(`[data-tab="${name}"]`).classList.add("active");
+  },
+
+  renderIssueTable(){
+    const body = document.getElementById("tableBody");
+    const set  = FILTERS.currentSet();
+    document.getElementById("recordCount").textContent =
+      `${set.length} record${set.length===1?"":"s"} shown`;
     if(set.length === 0){
-      body.innerHTML = `<tr class="empty-row"><td colspan="8">No records found for this range.</td></tr>`;
+      body.innerHTML = `<tr class="empty-row"><td colspan="10">No records found.</td></tr>`;
       return;
     }
-
-    body.innerHTML = set.map((r, i)=>`
+    body.innerHTML = set.map((r, i) => `
       <tr>
-        <td>${i + 1}</td>
+        <td>${i+1}</td>
         <td>${r.date}</td>
         <td>${escapeHtml(r.deptName)}</td>
         <td>${escapeHtml(r.officerName)}</td>
-        <td>${r.keyboards > 0 ? r.keyboards : "—"}</td>
-        <td>${r.mouse > 0 ? r.mouse : "—"}</td>
-        <td>${escapeHtml(r.other || "—")}</td>
+        <td>${escapeHtml(r.roomno)}</td>
+        <td>${escapeHtml(r.extension)}</td>
+        <td>${escapeHtml(r.material)}</td>
+        <td>${r.quantity}</td>
+        <td>${r.balance}</td>
         <td>${AUTH.isAdmin
           ? `<button class="btn-danger btn-small" onclick="ENTRIES.del('${r.id}')">Delete</button>`
-          : ""
-        }</td>
+          : ""}</td>
       </tr>
     `).join("");
   },
 
   async init(){
     CLOCK.start();
-    ENTRIES.initSelects();
-    ENTRIES.resetForm();
     AUTH.init();
     AUTH.renderAuthZone();
+    ENTRIES.init();
+    ENTRIES.resetForm();
+    STOCK.init();
     await STORE.loadAll();
-    this.renderTable();
+    this.renderIssueTable();
+    STOCK.renderTable();
+    STOCK.renderSummary();
+    this.showTab("records");
   }
 };
 

@@ -1,7 +1,7 @@
 {
-  "name": "asset-register-backend",
+  "name": "stock-register-backend",
   "version": "1.0.0",
-  "description": "Backend server for the Department Asset Register — serves the frontend and a small REST API backed by SQLite.",
+  "description": "Backend server for stock Register — serves the frontend and a small REST API backed by SQLite.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

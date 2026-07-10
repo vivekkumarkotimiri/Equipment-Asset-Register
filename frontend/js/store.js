@@ -1,50 +1,75 @@
-/* ================================================================
-   STORE
-   Talks to the backend REST API (server.js + db.js) instead of
-   any browser-only storage, so records are kept permanently in
-   the server's SQLite database and are the same for every device
-   that opens this page. AUTH.token is sent along with write
-   requests so the server can confirm admin rights.
-   ================================================================ */
 const STORE = {
   records: [],
+  stock:   [],
 
-  async loadAll(){
+  async loadAll(){ await Promise.all([this.loadRecords(), this.loadStock()]); },
+
+  async loadRecords(){
     try{
-      const res = await fetch(`${CONFIG.apiBase}/api/records`, { signal: AbortSignal.timeout(5000) });
-      if(!res.ok) throw new Error("Failed to load records");
+      const res  = await fetch(`${CONFIG.apiBase}/api/records`);
       const data = await res.json();
       this.records = data.records || [];
-    }catch(e){
-      console.error("Failed to load records", e);
-      this.records = [];
-    }
+    }catch(e){ console.error("load records:", e); this.records = []; }
   },
 
-  async save(record){
-    const res = await fetch(`${CONFIG.apiBase}/api/records`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${AUTH.token}`
-      },
+  async loadStock(){
+    try{
+      const res  = await fetch(`${CONFIG.apiBase}/api/stock`);
+      const data = await res.json();
+      this.stock = data.stock || [];
+    }catch(e){ console.error("load stock:", e); this.stock = []; }
+  },
+
+  async saveRecord(record){
+    const res  = await fetch(`${CONFIG.apiBase}/api/records`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${AUTH.token}` },
       body: JSON.stringify(record)
     });
     const data = await res.json();
-    if(!res.ok){
-      throw new Error(data.error || "Failed to save record.");
-    }
+    if(!res.ok) throw new Error(data.error || "Failed to save record.");
     return data.record;
   },
 
-  async remove(id){
+  async deleteRecord(id){
     const res = await fetch(`${CONFIG.apiBase}/api/records/${id}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${AUTH.token}` }
+      method:"DELETE", headers:{ "Authorization":`Bearer ${AUTH.token}` }
     });
-    if(!res.ok){
-      const data = await res.json().catch(()=>({}));
-      throw new Error(data.error || "Failed to delete record.");
-    }
+    if(!res.ok){ const d = await res.json().catch(()=>({})); throw new Error(d.error||"Failed to delete."); }
+  },
+
+  async saveStock(entry){
+    const res  = await fetch(`${CONFIG.apiBase}/api/stock`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${AUTH.token}` },
+      body: JSON.stringify(entry)
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Failed to save stock entry.");
+    return data.entry;
+  },
+
+  async updateStock(id, entry){
+    const res  = await fetch(`${CONFIG.apiBase}/api/stock/${id}`, {
+      method:"PUT",
+      headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${AUTH.token}` },
+      body: JSON.stringify(entry)
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Failed to update stock entry.");
+    return data.entry;
+  },
+
+  async deleteStock(id){
+    const res = await fetch(`${CONFIG.apiBase}/api/stock/${id}`, {
+      method:"DELETE", headers:{ "Authorization":`Bearer ${AUTH.token}` }
+    });
+    if(!res.ok){ const d = await res.json().catch(()=>({})); throw new Error(d.error||"Failed to delete."); }
+  },
+
+  async fetchBalance(material){
+    const res  = await fetch(`${CONFIG.apiBase}/api/balance/${encodeURIComponent(material)}`);
+    const data = await res.json();
+    return data.balance ?? 0;
   }
 };

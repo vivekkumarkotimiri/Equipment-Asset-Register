@@ -1,54 +1,41 @@
-/* ================================================================
-   EXPORT
-   PDF (jsPDF + autotable) and Excel (SheetJS) export of the
-   currently filtered record set (or full history if no filter
-   is applied).
-   ================================================================ */
 const EXPORT = {
   rowsForExport(){
-    return FILTERS.currentSet().map((r, i)=>[
-      i + 1, r.date, r.deptName, r.officerName,
-      r.keyboards > 0 ? r.keyboards : "—",
-      r.mouse > 0 ? r.mouse : "—",
-      r.other || "—"
+    return FILTERS.currentSet().map((r, i) => [
+      i+1, r.date, r.deptName, r.officerName,
+      r.roomno||"—", r.extension||"—",
+      r.material, r.quantity, r.balance
     ]);
   },
 
   toPDF(){
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("Department Asset Register", 14, 16);
-    doc.setFontSize(9);
+    const doc = new jsPDF({ orientation:"landscape" });
+    doc.setFontSize(13);
+    doc.text("Stock Issue Register", 14, 14);
+    doc.setFontSize(8);
     const from = document.getElementById("filterFrom").value;
-    const to = document.getElementById("filterTo").value;
-    const rangeLabel = (from || to) ? `Range: ${from || "start"} to ${to || "today"}` : "Range: full history";
-    doc.text(rangeLabel + "  |  Generated: " + new Date().toLocaleString(), 14, 22);
-
+    const to   = document.getElementById("filterTo").value;
+    const range = (from||to) ? `Range: ${from||"start"} – ${to||"today"}` : "Full history";
+    doc.text(range + "   |   Generated: " + new Date().toLocaleString(), 14, 20);
     doc.autoTable({
-      startY: 28,
-      head: [["S.No.","Date","Department Name","Name of Officer","Keyboards","Mouse","Other"]],
+      startY: 26,
+      head:[["S.No.","Date","Department","Name of the Officer","Room No.","Extension","Material","Issued Qty","Balance"]],
       body: this.rowsForExport(),
-      styles:{ fontSize:8 },
-      headStyles:{ fillColor:[22,51,58] }
+      styles:{ fontSize:7 }, headStyles:{ fillColor:[22,51,58] }
     });
-
-    doc.save("asset-register.pdf");
+    doc.save("stock-issue-register.pdf");
   },
 
   toExcel(){
-    const rows = FILTERS.currentSet().map((r, i)=>({
-      "S.No.": i + 1,
-      Date: r.date,
-      "Department Name": r.deptName,
-      "Name of Officer": r.officerName,
-      Keyboards: r.keyboards > 0 ? r.keyboards : "—",
-      Mouse: r.mouse > 0 ? r.mouse : "—",
-      Other: r.other || "—"
+    const rows = FILTERS.currentSet().map((r, i) => ({
+      "S.No.": i+1, Date: r.date,
+      "Department Name": r.deptName, "Name of the Officer": r.officerName,
+      "Room No": r.roomno||"","Extension": r.extension||"",
+      "Material": r.material, "Issued Qty": r.quantity, "Balance": r.balance
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Records");
-    XLSX.writeFile(wb, "asset-register.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Issue Records");
+    XLSX.writeFile(wb, "stock-issue-register.xlsx");
   }
 };
