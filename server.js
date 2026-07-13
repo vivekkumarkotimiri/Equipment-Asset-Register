@@ -13,8 +13,10 @@ const app  = express();
 const PORT             = process.env.PORT             || 3030;
 const JWT_SECRET       = process.env.JWT_SECRET       || "dev-secret-change-me";
 const TOKEN_EXPIRY     = process.env.TOKEN_EXPIRY     || "12h";
-const ADMIN_USERNAME   = process.env.ADMIN_USERNAME   || "admin";
-const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD   || "admin123";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const USER_USERNAME  = process.env.USER_USERNAME  || "user";
+const USER_PASSWORD  = process.env.USER_PASSWORD  || "user123";
 
 app.set("trust proxy", 1);
 app.use(cors());
@@ -27,12 +29,33 @@ const loginLimiter = rateLimit({
   standardHeaders: true, legacyHeaders: false
 });
 
-function requireAdmin(req, res, next){
+// Verifies token and attaches decoded payload to req.user
+function verifyToken(req, res){
   const header = req.headers.authorization || "";
   const token  = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if(!token) return res.status(401).json({ error: "Login required." });
-  try{ jwt.verify(token, JWT_SECRET); next(); }
-  catch(e){ res.status(401).json({ error: "Session expired. Please log in again." }); }
+  if(!token){ res.status(401).json({ error: "Login required." }); return null; }
+  try{ return jwt.verify(token, JWT_SECRET); }
+  catch(e){ res.status(401).json({ error: "Session expired. Please log in again." }); return null; }
+}
+
+// Admin OR user — can add/delete issue records
+function requireMember(req, res, next){
+  const decoded = verifyToken(req, res);
+  if(!decoded) return;
+  if(decoded.role !== "admin" && decoded.role !== "user")
+    return res.status(403).json({ error: "Access denied." });
+  req.user = decoded;
+  next();
+}
+
+// Admin only — stock entry management
+function requireAdmin(req, res, next){
+  const decoded = verifyToken(req, res);
+  if(!decoded) return;
+  if(decoded.role !== "admin")
+    return res.status(403).json({ error: "Admin access required." });
+  req.user = decoded;
+  next();
 }
 
 /* --- Login --- */
@@ -40,7 +63,11 @@ app.post("/api/login", loginLimiter, (req, res) => {
   const { username, password } = req.body || {};
   if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD){
     const token = jwt.sign({ role:"admin", username }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
-    return res.json({ token });
+    return res.json({ token, role: "admin" });
+  }
+  if(username === USER_USERNAME && password === USER_PASSWORD){
+    const token = jwt.sign({ role:"user", username }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    return res.json({ token, role: "user" });
   }
   res.status(401).json({ error: "Incorrect username or password." });
 });
@@ -50,7 +77,7 @@ app.get("/api/records", (_req, res) => {
   res.json({ records: db.getAllRecords() });
 });
 
-app.post("/api/records", requireAdmin, (req, res) => {
+app.post("/api/records", requireMember, (req, res) => {
   const { date, deptName, officerName, roomno, extension, material, quantity } = req.body || {};
   if(!deptName?.trim() || !officerName?.trim() || !material?.trim())
     return res.status(400).json({ error: "Department, officer and material are required." });
@@ -69,7 +96,7 @@ app.post("/api/records", requireAdmin, (req, res) => {
   res.status(201).json({ record: db.addRecord(record) });
 });
 
-app.delete("/api/records/:id", requireAdmin, (req, res) => {
+app.delete("/api/records/:id", requireMember, (req, res) => {
   const removed = db.deleteRecord(req.params.id);
   if(!removed) return res.status(404).json({ error: "Record not found." });
   res.json({ success: true });

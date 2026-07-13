@@ -31,7 +31,7 @@
 
 <div class="tab-nav">
   <button class="tab-btn" data-tab="records" onclick="APP.showTab('records')">📋 Records</button>
-  <button class="tab-btn admin-only" data-tab="issue" onclick="APP.showTab('issue')" style="display:none;">➕ Issue Entry</button>
+  <button class="tab-btn member-only" data-tab="issue" onclick="APP.showTab('issue')" style="display:none;">➕ Issue Entry</button>
   <button class="tab-btn admin-only" data-tab="stock" onclick="APP.showTab('stock')" style="display:none;">📦 Stock Entry</button>
 </div>
 
@@ -49,6 +49,10 @@
       <div class="field">
         <label>Password</label>
         <input id="loginPass" type="password" autocomplete="current-password">
+      </div>
+      <div class="field" style="margin-top:4px;">
+        <label id="captchaQuestion" style="font-size:14px;color:var(--teal);font-weight:700;text-transform:none;letter-spacing:0;">—</label>
+        <input id="captchaInput" type="number" placeholder="Your answer">
       </div>
       <div class="error-msg" id="loginError"></div>
       <button class="btn-primary" style="width:100%;padding:10px;" onclick="AUTH.attemptLogin()">Log in</button>
