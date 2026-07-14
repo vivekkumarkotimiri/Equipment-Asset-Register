@@ -1,89 +1,268 @@
-# Department Asset Register
 
-A small web app for logging department equipment (keyboards, mouse, etc.)
-with a live clock, date-range PDF/Excel export, public read-only access,
-and admin-only data entry. Now backed by a real server + database, so it
-works from multiple devices at once over your network.
+# Stock Entry Register
 
-## How it works
+A web-based stock and issue management system for TGTRANSCO's AMC Contractor,
+built on Node.js + SQLite. One computer runs the server; every other device on
+the same network (or internet, if port-forwarded) opens it in a browser.
 
-- `backend/` — a Node.js server (Express + SQLite) that stores all records
-  in a single file, `backend/data.db`, and serves the website itself.
-- `frontend/` — the web page (HTML/CSS/JS) that everyone sees in their browser.
+---
 
-Only **one computer** needs to run the server. Every other device (phone,
-laptop, tablet) just opens that computer's address in a browser — no
-installation needed on those devices.
-
-## Setup (do this once)
-
-1. Install [Node.js](https://nodejs.org) (version 18 or later) on the
-   computer that will act as the server.
-2. Open a terminal in the `backend` folder and install dependencies:
-
-   ```
-   cd backend
-   npm install
-   ```
-
-3. Copy the example environment file and set your admin password:
-
-   ```
-   cp .env.example .env
-   ```
-
-   Then open `.env` in a text editor and change `ADMIN_USERNAME`,
-   `ADMIN_PASSWORD`, and `JWT_SECRET` to your own values.
-
-## Running the server
+## Project Structure
 
 ```
-cd backend
+stock entry register/
+├── server.js                  Express server — API + serves the frontend
+├── db.js                      SQLite database layer (two tables: records, stock)
+├── data.db                    Auto-created on first run — DO NOT DELETE (your data)
+├── package.json
+├── .env.example               Copy this to .env and fill in your credentials
+├── .env                       Your actual secrets (never share or commit this)
+├── README.md
+├── DEPLOYMENT.md              Guide for port-forwarding / internet access
+└── frontend/
+    ├── index.html             Main page (tabs + login modal + CAPTCHA)
+    ├── images/
+    │   └── logo.png           TGTRANSCO logo shown in the header
+    ├── css/
+    │   └── styles.css         All styling
+    └── js/
+        ├── config.js          API base URL + shared materials list
+        ├── utils.js           escapeHtml(), buildMaterialSelect()
+        ├── clock.js           Live date/time in the header
+        ├── store.js           All fetch() calls to the backend API
+        ├── auth.js            Login/logout, CAPTCHA, role-based tab visibility
+        ├── entries.js         Issue Entry form logic
+        ├── stock.js           Stock Entry form, stock table, summary table + exports
+        ├── filters.js         Date-range filter for the Records tab
+        ├── export.js          PDF and Excel export for Issue Records
+        └── app.js             Tab switching, issue table render, app bootstrap
+```
+
+---
+
+## One-Time Setup
+
+### 1. Install Node.js
+
+Download and install **Node.js v18 or later** from https://nodejs.org.
+
+### 2. Install dependencies
+
+Open a terminal/PowerShell inside the project folder and run:
+
+```
+npm install
+```
+
+### 3. Create your `.env` file
+
+Copy the example file:
+
+```
+# Windows
+copy .env.example .env
+
+# Mac / Linux
+cp .env.example .env
+```
+
+Then open `.env` in a text editor and set your own values:
+
+```
+PORT=3030
+
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+
+USER_USERNAME=user
+USER_PASSWORD=user123
+
+JWT_SECRET=replace-this-with-a-long-random-string
+TOKEN_EXPIRY=12h
+```
+
+> **Important:** Change `JWT_SECRET` to any long random string before real use.
+> You can generate one at https://generate-secret.vercel.app/32
+
+---
+
+## Running the Server
+
+```
 npm start
 ```
 
-You'll see something like:
+You will see:
 
 ```
-Asset Register server running.
-On this computer:        http://localhost:3000
-From other devices on the same network: http://<this-computer's-IP>:3000
+Stock Register running at http://localhost:3030
+Network: http://192.168.x.x:3030
 ```
 
-- On the server computer itself, open `http://localhost:3000`.
-- On any other device connected to the **same Wi-Fi/network**, find this
-  computer's local IP address (Windows: `ipconfig`, Mac/Linux: `ifconfig`
-  or `ip addr`, look for something like `192.168.1.x`) and open
-  `http://192.168.1.x:3000` in a browser.
+- Open `http://localhost:3030` on the server computer.
+- Open `http://192.168.x.x:3030` from any other device on the same Wi-Fi/network
+  (replace with the actual IP shown in your terminal).
 
-Keep the terminal window open — closing it stops the server. To make the
-server start automatically and keep running in the background, look into
-tools like [pm2](https://pm2.keymetrics.io/) or running it as a system
-service.
+**Keep the terminal open** — closing it stops the server.
 
-## Who can see and do what
+To keep it running in the background (so it survives terminal closes), use
+[pm2](https://pm2.keymetrics.io/):
 
-- **Anyone** who opens the page can view all records and export them to
-  PDF or Excel (a chosen date range, or the full history).
-- **Only someone who logs in** with the admin username/password from
-  `.env` can add new equipment records. The login check happens on the
-  server (`backend/server.js`), not in the browser, so the password is
-  never visible in the page's code.
-- Each device that wants to add records needs to log in separately on
-  that device; admin login isn't shared automatically between devices.
+```
+npm install -g pm2
+pm2 start server.js --name stock-register
+pm2 save
+pm2 startup
+```
 
-## Data storage
+---
 
-All records live in `backend/data.db`, a SQLite database file. This
-persists across server restarts and computer reboots. Back this file up
-periodically if the data matters — copying `data.db` elsewhere is a full
-backup.
+## User Roles & Access
 
-## Opening this to the internet (optional, advanced)
+There are three access levels. The login modal includes a **math CAPTCHA**
+(e.g. "What is 4 + 7?") that must be answered correctly before credentials
+are checked.
 
-By default this only works on devices on the same local network as the
-server computer. To make it reachable from outside (e.g. remote offices),
-you'd need to either port-forward your router to this computer, or deploy
-the `backend` folder to a hosting service (Render, Railway, a VPS, etc.).
-That's a bigger step with its own security considerations — ask if you'd
-like help with it.
+| Feature                       | Public | User | Admin |
+| ----------------------------- | :----: | :--: | :---: |
+| View Issue Records            |   ✅   |  ✅  |  ✅  |
+| Export Records → PDF / Excel |   ✅   |  ✅  |  ✅  |
+| Issue Entry tab (add records) |   ❌   |  ✅  |  ✅  |
+| Delete issue records          |   ❌   |  ✅  |  ✅  |
+| Stock Entry tab (add stock)   |   ❌   |  ❌  |  ✅  |
+| Edit / Delete stock entries   |   ❌   |  ❌  |  ✅  |
+| View Material Stock Summary   |   ❌   |  ❌  |  ✅  |
+| Export Summary → PDF / Excel |   ❌   |  ❌  |  ✅  |
+
+**Default credentials** (change in `.env` before sharing with others):
+
+| Role  | Username | Password |
+| ----- | -------- | -------- |
+| Admin | admin    | admin123 |
+| User  | user     | user123  |
+
+Admin sessions and User sessions are stored separately in each browser's
+local storage — logging in on one device does not affect any other device.
+
+---
+
+## Tabs
+
+### 📋 Records (everyone)
+
+- Full table of all issue records with S.No., Date, Department, Officer,
+  Room, Extension, Material, Issued Qty, and Balance at time of issue.
+- Filter by date range or view the full history.
+- Export the current view to **PDF** or **Excel**.
+- Admin and User see a **Delete** button on each row.
+
+### ➕ Issue Entry (User + Admin)
+
+- Select Department from a dropdown list of all TGTRANSCO departments.
+- Fill in Officer Name, Room No, Extension.
+- Select Material from the standard list; choosing **Other** shows a text
+  box to type a custom material name.
+- Once a material is selected (or typed), the **Balance** field auto-fills
+  with the current available stock for that material.
+- Save is blocked if the issued quantity exceeds available stock.
+- Record Date defaults to today but can be changed.
+
+### 📦 Stock Entry (Admin only)
+
+Three sections on this tab:
+
+1. **Add / Update Stock form** — Date, Material (same dropdown with Other
+   support), Quantity. Click **Save** to add or **Update** after clicking
+   Edit on a row below.
+2. **Stock Entries log** — every stock addition, with Edit and Delete per row.
+3. **Material Stock Summary** — one row per unique material showing:
+   - Total Stocked (all additions)
+   - Total Issued (all issue records)
+   - Current Balance (stocked − issued), colour-coded green/grey/red.
+   - Own **Export PDF** and **Export Excel** buttons for just this table.
+
+---
+
+## How Balance Works
+
+Balance is calculated server-side as:
+
+```
+Balance = SUM(stock.quantity for material) − SUM(records.quantity for material)
+```
+
+- When adding an issue entry, the live balance is fetched and shown.
+- The balance stored on each issue record is a **snapshot at the time of
+  issue** (balance after that entry was saved).
+- The Summary table always reflects the **current live totals**.
+
+---
+
+## Materials List
+
+The standard dropdown (defined in `frontend/js/config.js`):
+
+- Keyboard
+- Mouse
+- PC
+- Printer
+- SMPS
+- CMOS Battery
+- Teflon Sheet
+- Pickup Roller
+- Pressure Roller
+- Other *(shows a free-text box; name is stored exactly as typed)*
+
+To add more standard items, edit the `MATERIALS` array in `config.js`.
+
+---
+
+## Data Storage
+
+All data lives in `data.db` (SQLite, created automatically on first run).
+
+Two tables:
+
+- **records** — issue entries (deptName, officerName, roomno, extension,
+  material, quantity, balance, date, createdAt)
+- **stock** — stock additions (material, quantity, date, createdAt)
+
+**Back up `data.db` regularly** — it is the only copy of your records.
+Copying the file elsewhere is a complete backup.
+
+---
+
+## Changing Credentials
+
+Edit `.env` and restart the server:
+
+```
+npm start
+```
+
+Changes take effect immediately on next login. Existing sessions using old
+tokens will expire within the `TOKEN_EXPIRY` window (default 12 hours).
+
+---
+
+## Accessing from the Internet
+
+See **DEPLOYMENT.md** for the full step-by-step guide covering:
+
+- Dynamic DNS (free hostname via DuckDNS so your IP doesn't matter)
+- Port forwarding on your router
+- HTTPS via Caddy (free automatic certificate — required before exposing
+  to the internet so passwords aren't sent in plain text)
+
+---
+
+## Troubleshooting
+
+| Problem                              | Fix                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| `Cannot GET /`                     | Check that`frontend/` folder is in the same directory as `server.js` |
+| Port already in use                  | Change`PORT=3030` in `.env` to another number e.g. `3031`          |
+| `better-sqlite3` install error     | Run`npm approve-scripts better-sqlite3` then `npm install`           |
+| Login button not appearing           | Hard-refresh the browser (`Ctrl+Shift+R`)                              |
+| Balance shows 0 for "Other" material | Make sure the name is spelled identically in Stock Entry and Issue Entry |
+| Can't reach from other devices       | Check firewall — allow inbound TCP on the port in Windows Defender      |
